@@ -2,6 +2,7 @@ import discord
 from discord.ext import commands
 from dotenv import load_dotenv
 import os
+import webserver
 
 load_dotenv()
 
@@ -20,4 +21,5 @@ async def hello(ctx):
 async def on_ready():
     print(f'Logged in as {bot.user}')
 
+webserver.keep_alive()
 bot.run(token)
