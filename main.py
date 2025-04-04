@@ -5,6 +5,7 @@ from services.economyService import EconomyService
 import os
 from dotenv import load_dotenv
 from logger.logger import setup_logging
+import webserver
 
 from services.userService import UserService
 
@@ -62,6 +63,7 @@ async def on_ready():
 
 if __name__ == '__main__':
     try:
+        webserver.keep_alive()
         bot.run(os.getenv('DISCORD_TOKEN'))
     except KeyboardInterrupt:
         bot.logger.info("\nBot stopped by user")
