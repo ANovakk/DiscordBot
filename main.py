@@ -4,6 +4,7 @@ from database.databaseManager import DatabaseManager
 from services.economyService import EconomyService
 import os
 from dotenv import load_dotenv
+from logger.logger import setup_logging
 
 from services.userService import UserService
 
@@ -16,9 +17,17 @@ class MyBot(commands.Bot):
         intents.members = True
 
         super().__init__(command_prefix='!', intents=intents)
-        self.db = DatabaseManager()
-        self.economy_service = EconomyService(self.db)
-        self.user_service = UserService(self.db)
+
+        # Logger
+        self.logger = setup_logging()
+
+        # DataBase
+        self.db = DatabaseManager(self.logger)
+
+        # Services
+        self.economy_service = EconomyService(self.db, self.logger)
+        self.user_service = UserService(self.db, self.logger)
+
 
     async def setup_hook(self):
         await self.init_db()
@@ -28,7 +37,7 @@ class MyBot(commands.Bot):
         try:
             await self.db.connect()
         except Exception as e:
-            print(f"DB Error: {e}")
+            self.logger.error(f"DB Error: {e}")
             await self.close()
 
     async def load_cogs(self):
@@ -36,9 +45,10 @@ class MyBot(commands.Bot):
             await self.load_extension('cogs.economy')
             await self.load_extension('cogs.server_events')
             await self.load_extension('cogs.user')
-            print("Cogs were loaded successfully")
+
+            self.logger.info("Cogs were loaded successfully")
         except commands.ExtensionError as e:
-            print(f"Cog loading error: {e}")
+            self.logger.error(f"Cog loading error: {e}")
 
     async def close(self):
         await self.db.close()
@@ -48,10 +58,10 @@ bot = MyBot()
 
 @bot.event
 async def on_ready():
-    print(f'Logged in as {bot.user} (ID: {bot.user.id})')
+    bot.logger.info(f'Logged in as {bot.user} (ID: {bot.user.id})')
 
 if __name__ == '__main__':
     try:
         bot.run(os.getenv('DISCORD_TOKEN'))
     except KeyboardInterrupt:
-        print("\nBot stopped by user")
+        bot.logger.info("\nBot stopped by user")

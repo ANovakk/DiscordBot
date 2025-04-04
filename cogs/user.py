@@ -4,6 +4,7 @@ class UserCog(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
         self.user_service = bot.user_service
+        self.logger = bot.logger
 
     @commands.command()
     async def hello(self, ctx):

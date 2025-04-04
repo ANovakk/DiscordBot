@@ -1,6 +1,7 @@
 class UserService:
-    def __init__(self, db):
+    def __init__(self, db, logger):
         self.db = db
+        self.logger = logger
 
     async def register_user(self, member):
         """
@@ -11,10 +12,10 @@ class UserService:
         result = await self.db.register_user(member)
 
         if result == "created":
-            print(f"User {member.name} registered successfully")
+            self.logger.info(f"User {member.name} registered successfully")
         elif result == "exists":
-            print(f"User {member.name} is already registered")
+            self.logger.info(f"User {member.name} is already registered")
         else:
-            print(f"Error registering user {member.name}")
+            self.logger.error(f"Error registering user {member.name}")
 
         return result

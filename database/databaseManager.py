@@ -5,7 +5,8 @@ from dotenv import load_dotenv
 load_dotenv()
 
 class DatabaseManager:
-    def __init__(self):
+    def __init__(self, logger):
+        self.logger = logger
         self.pool = None
         self.connection_url = os.getenv('DATABASE_URL')
 
@@ -13,7 +14,7 @@ class DatabaseManager:
         self.pool = await asyncpg.create_pool(
             self.connection_url,
             statement_cache_size=0)
-        print("Connection with database is established")
+        self.logger.info("Database connection established")
 
     async def close(self):
         if self.pool:
