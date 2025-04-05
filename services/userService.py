@@ -1,3 +1,5 @@
+from typing import List, Dict
+
 class UserService:
     def __init__(self, db, logger):
         self.db = db
@@ -19,3 +21,6 @@ class UserService:
             self.logger.error(f"Error registering user {member.name}")
 
         return result
+
+    async def get_top_users_by_activity(self, limit: int = 10) -> List[Dict]:
+        return await self.db.get_top_users_by_balance(limit)
