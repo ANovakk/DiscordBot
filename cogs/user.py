@@ -1,4 +1,6 @@
+import discord
 from discord.ext import commands
+from services.paginator import Paginator
 
 class UserCog(commands.Cog):
     def __init__(self, bot):
@@ -29,8 +31,28 @@ class UserCog(commands.Cog):
     async def get_top_users(self, ctx):
         """Get the top 10 users by Balance, by Discord Activity"""
 
-        top_users_by_activity = await self.user_service.get_top_users_by_activity(ctx)
-        top_users_by_balance = await self.economy_service.get_top_users_by_balance(ctx)
+        self.logger.info("Getting top users")
+
+        top_users_by_activity = await self.user_service.get_top_users_by_activity()
+        top_users_by_balance = await self.economy_service.get_top_users_by_balance()
+
+        page1 = discord.Embed(
+            title="Top Users by time in voice channels",
+            description="\n".join(f"{i + 1}. {user}" for i, user in enumerate(top_users_by_activity)),
+            color=0x3498db
+        )
+
+        page2 = discord.Embed(
+            title="Top Users by Balance",
+            description="\n".join(f"{i + 1}. {user}" for i, user in enumerate(top_users_by_balance)),
+            color=0x2ecc71
+        )
+
+        pages = [page1, page2]
+        view = Paginator(pages)
+        await ctx.send(embed=pages[0], view=view)
+
+
 
 async def setup(bot):
     await bot.add_cog(UserCog(bot))

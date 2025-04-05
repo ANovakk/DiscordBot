@@ -19,12 +19,10 @@ class DatabaseManager:
     async def close(self):
         if self.pool:
             await self.pool.close()
-            print("Connection with database is closed")
+            self.logger.info("Connection with database is closed")
 
 
-    """
-    Commands to work with Users
-    """
+    # Functions to work with Users
 
     async def register_user(self, member) -> str:
         try:
@@ -45,26 +43,40 @@ class DatabaseManager:
             print(f"[register_user] Ошибка: {e}")
             return "error"
 
-    async def get_top_users(self, limit: int = 10) -> list[dict]:
+    async def get_top_users_by_balance(self, limit: int = 10) -> list[dict]:
         """
-        Function to get top users by balance
+        Function to get top users by Balance
         """
+
         async with self.pool.acquire() as conn:
             records = await conn.fetch(
-                "SELECT id, balance FROM users "
+                "SELECT username, balance FROM users "
                 "ORDER BY balance DESC LIMIT $1",
                 limit
             )
             return [dict(record) for record in records]
 
-    """
-    Commands to work with Money
-    """
+    async def get_top_users_by_activity(self, limit: int = 10) -> list[dict]:
+        """
+            Function to get top users by Discord Activity
+        """
 
-    async def add_money(self, user_id: int, amount: int) -> bool:
+        async with self.pool.acquire() as conn:
+            records = await conn.fetch(
+                "SELECT username, total_voice_time FROM users "
+                "ORDER BY total_voice_time DESC LIMIT $1",
+                limit
+            )
+            return [dict(record) for record in records]
+
+
+    # Functions to work with Money
+
+    async def add_money(self, user_id, amount) -> bool:
         result = await self.pool.execute(
             "UPDATE users "
             "SET balance = balance + $1 "
-            "WHERE id = $2", (amount, user_id)
+            "WHERE id = $2",
+            amount, str(user_id)
         )
         return result
