@@ -19,11 +19,10 @@ class DatabaseManager:
     async def close(self):
         if self.pool:
             await self.pool.close()
-            print("Connection with database is closed")
-
+            self.logger.info("Connection with database is closed")
 
     """
-    Commands to work with Users
+    Functions to work with Users
     """
 
     async def register_user(self, member) -> str:
@@ -58,13 +57,69 @@ class DatabaseManager:
             return [dict(record) for record in records]
 
     """
-    Commands to work with Money
+    Functions to work with Money
     """
 
-    async def add_money(self, user_id: int, amount: int) -> bool:
+    async def add_money(self, user_id, amount) -> bool:
         result = await self.pool.execute(
             "UPDATE users "
             "SET balance = balance + $1 "
-            "WHERE id = $2", (amount, user_id)
+            "WHERE id = $2",
+            amount, str(user_id)
         )
         return result
+
+    """
+    Functions to work with Voice channel records
+    """
+
+    async def change_last_join_time(self, user_id, time):
+        self.logger.info(f"Change last join time {user_id} {time}")
+        try:
+            await self.pool.execute(
+                "UPDATE users "
+                "SET last_join_time = $1 "
+                "WHERE user_id = $2",
+                time, str(user_id)
+            )
+        except Exception as e:
+            self.logger.error(e)
+
+    async def get_last_join_time(self, user_id) -> str:
+        self.logger.info(f"Get last join time {user_id}")
+        try:
+            last_join_time = await self.pool.fetchval(
+               "SELECT last_join_time FROM users "
+                "WHERE user_id = $1",
+                str(user_id)
+            )
+            return last_join_time
+        except Exception as e:
+            self.logger.error(e)
+
+    async def add_total_voice_time(self, user_id, time):
+        self.logger.info(f"Add total voice time {user_id} {time}")
+        try:
+            await self.pool.execute(
+                "UPDATE users "
+                "SET total_voice_time = total_voice_time + $1 "
+                "WHERE user_id = $2",
+                time, str(user_id)
+            )
+        except Exception as e:
+            self.logger.error(e)
+
+    async def add_voice_channel_log(self, user_id, channel_id,
+                                        channel_name, join_time,
+                                        leave_time, duration):
+        self.logger.info(f"Add voice channel log {user_id} {channel_name} {duration} seconds")
+        try:
+            await self.pool.execute(
+                "INSERT INTO voice_logs"
+                "(user_id, channel_id, channel_name, join_time, leave_time, duration)"
+                "VALUES ($1, $2, $3, $4, $5, $6)",
+                str(user_id), str(channel_id), channel_name,
+                 join_time, leave_time, duration
+            )
+        except Exception as e:
+            self.logger.error(e)
