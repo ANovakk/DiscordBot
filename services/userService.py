@@ -1,5 +1,3 @@
-from typing import List, Dict
-
 class UserService:
     def __init__(self, db, logger):
         self.db = db
@@ -24,3 +22,23 @@ class UserService:
 
     async def get_top_users_by_activity(self, limit: int = 10) -> List[Dict]:
         return await self.db.get_top_users_by_balance(limit)
+
+    async def voice_record(self, user_id, channel_id, channel_name, time, flag):
+        """
+
+        :param user_id:
+        :param time: Time when event was recorded.
+        :param flag: Join the voice channel: 0
+                     Leave the voice channel: 1
+                     Change the voice channel: 2
+        :return:
+        """
+
+        if flag == 0:
+            await self.db.change_last_join_time(user_id, time)
+        elif flag == 1:
+            time_from = await self.db.get_last_join_time(user_id)
+            duration = int((time - time_from).total_seconds())
+
+            await self.db.add_voice_channel_log(user_id, channel_id, channel_name, time_from, time, duration)
+            await self.db.add_total_voice_time(user_id, duration)

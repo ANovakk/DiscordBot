@@ -80,3 +80,58 @@ class DatabaseManager:
             amount, str(user_id)
         )
         return result
+
+
+    # Functions to work with Voice channel records
+
+
+    async def change_last_join_time(self, user_id, time):
+        self.logger.info(f"Change last join time {user_id} {time}")
+        try:
+            await self.pool.execute(
+                "UPDATE users "
+                "SET last_join_time = $1 "
+                "WHERE user_id = $2",
+                time, str(user_id)
+            )
+        except Exception as e:
+            self.logger.error(e)
+
+    async def get_last_join_time(self, user_id) -> str:
+        self.logger.info(f"Get last join time {user_id}")
+        try:
+            last_join_time = await self.pool.fetchval(
+               "SELECT last_join_time FROM users "
+                "WHERE user_id = $1",
+                str(user_id)
+            )
+            return last_join_time
+        except Exception as e:
+            self.logger.error(e)
+
+    async def add_total_voice_time(self, user_id, time):
+        self.logger.info(f"Add total voice time {user_id} {time}")
+        try:
+            await self.pool.execute(
+                "UPDATE users "
+                "SET total_voice_time = total_voice_time + $1 "
+                "WHERE user_id = $2",
+                time, str(user_id)
+            )
+        except Exception as e:
+            self.logger.error(e)
+
+    async def add_voice_channel_log(self, user_id, channel_id,
+                                        channel_name, join_time,
+                                        leave_time, duration):
+        self.logger.info(f"Add voice channel log {user_id} {channel_name} {duration} seconds")
+        try:
+            await self.pool.execute(
+                "INSERT INTO voice_logs"
+                "(user_id, channel_id, channel_name, join_time, leave_time, duration)"
+                "VALUES ($1, $2, $3, $4, $5, $6)",
+                str(user_id), str(channel_id), channel_name,
+                 join_time, leave_time, duration
+            )
+        except Exception as e:
+            self.logger.error(e)
